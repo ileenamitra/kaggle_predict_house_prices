@@ -4,8 +4,9 @@ output: R notebook
 ---
 
 ```{r}
-train<-read.csv("train.csv",header=T)
+train<-read.csv("train.csv",header=TRUE)
 head(train)
+
 ```
 
 ```{r}
@@ -15,6 +16,11 @@ train_na
 ```
 ```{r}
 #Imputation for lot frontage
-LotFrontage_na=na.omit(train['LotFrontage'])
+LotFrontage_wna=which(!is.na(train['LotFrontage']))
+cor(train$LotFrontage[LotFrontage_wna],train$LotArea[LotFrontage_wna])
+cor(train$LotFrontage[LotFrontage_wna],sqrt(train$LotArea[LotFrontage_wna]))
+sqrtLotArea=sqrt(train$LotArea[LotFrontage_wna])
+LotFrontage_na=which(is.na(train['LotFrontage']))
+
 ```
 

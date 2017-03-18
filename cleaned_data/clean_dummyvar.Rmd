@@ -1,0 +1,23 @@
+---
+title: "Introducing dummy variables for the categorical variables"
+output: cleandmy.csv
+---
+
+
+```{r}
+library(caret)
+library(lattice)
+library(ggplot2)
+clean=read.csv("clean.csv", header=TRUE)
+```
+```{r}
+#using dummyVars from caret package to assign dummy variables to the categorical functions
+dmy<-dummyVars("~ .", data= clean, fullRank = TRUE)
+cleandmy<-data.frame(predict(dmy, newdata = clean))
+```
+```{r}
+write.csv(cleandmy, file="cleandmy.csv")
+```
+
+
+

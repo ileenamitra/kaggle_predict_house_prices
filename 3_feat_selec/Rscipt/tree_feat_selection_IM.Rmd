@@ -1,0 +1,56 @@
+---
+title: "R Notebook"
+output: html_notebook
+author: "Ileena Mitra"
+date: "March 20th, 2017"
+---
+
+#Math 289c Final Project
+
+Set up
+```{r}
+library(readr)
+library(tree)
+
+clean <- read_csv("~/Google_Drive/UCSD/Winter2017/ExpDataAnalysis/Projects/Final/kaggle_predict_house_prices/cleaned_data/clean.csv")
+clean$X1 <- NULL
+cleandmy <- read_csv("~/Google_Drive/UCSD/Winter2017/ExpDataAnalysis/Projects/Final/kaggle_predict_house_prices/cleaned_data/cleandmy.csv")
+cleandmy$X <- NULL
+cleandmy$X1 <- NULL
+
+
+# ensure the results are repeatable
+set.seed(888)
+```
+
+We then fit a tree on the dat frame with appropriate columns.
+```{r}
+dat <- clean
+dat.tree <- tree(SalePrice~math+sex+age+educ+work+like, dat=dat)
+plot(dat.tree, type="uniform")
+text(dat.tree)
+```
+
+
+```{r}
+lr.all <- glm(grade_binary~math+sex+age+educ+work+like, data = dat, family = gaussian)
+#display the results
+print(summary(lr.all))
+```
+
+```{r}
+# load the library
+library(mlbench)
+library(caret)
+nums <- sapply(x, is.numeric)
+dat<-cleandmy[!is.na(cleandmy),]
+# calculate correlation matrix
+correlationMatrix <- cor(dat[,2:259])
+# summarize the correlation matrix
+print(correlationMatrix)
+# find attributes that are highly corrected (ideally >0.75)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.75)
+# print indexes of highly correlated attributes
+print(highlyCorrelated)
+```
+

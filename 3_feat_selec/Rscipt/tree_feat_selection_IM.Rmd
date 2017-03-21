@@ -32,7 +32,8 @@ clean.char <- clean[ , sapply(clean, is.character)]
 
 ```
 
-
+##Feature Correlation
+http://machinelearningmastery.com/feature-selection-with-the-caret-r-package/
 ```{r}
 # load the library
 library(mlbench)
@@ -45,12 +46,37 @@ correlationMatrix <- cor(dat)
 ###print(correlationMatrix)
 
 # find attributes that are highly corrected (ideally >0.75)
-highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.8)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.8, names = TRUE)
 # print indexes of highly correlated attributes
-###print(highlyCorrelated)
+print(highlyCorrelated)
 
-print(correlationMatrix[highlyCorrelated,])
+View(correlationMatrix[,highlyCorrelated])
 ```
+
+
+
+
+
+##Feature Selection
+```{r}
+dat<- clean.num
+
+# define the control using a random forest selection function
+control <- rfeControl(functions=rfFuncs, method="boot", number=10)
+# run the RFE algorithm
+results <- rfe(dat[,names(clean.num) != "SalePrice"], dat$SalePrice, sizes=c(1:36), rfeControl=control)
+# summarize the results
+print(results)
+# list the chosen features
+predictors(results)
+# plot the results
+plot(results, type=c("g", "o"))
+```
+
+
+
+
+
 
 ######OTHER TRIAL METHODS#######
 We then fit a tree on the dat frame with appropriate columns.

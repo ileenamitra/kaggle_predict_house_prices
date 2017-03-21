@@ -32,6 +32,12 @@ testPrices <-log(test$SalePrice)
 
 testModel<- lm(testPrices~., data=test)
 summary(testModel)
+
+#run regression on numerical values only
+numModel<-lm(logSalePrice~., data=num)
+summary(numModel)
+
+
 #model with dummy data (cleandmy.csv)
 firstModel <- lm(logSalePrice~., data=expanded_data)
 summary(firstModel)

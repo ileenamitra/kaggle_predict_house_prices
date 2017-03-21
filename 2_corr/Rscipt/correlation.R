@@ -25,7 +25,13 @@ expanded_data$SalePrice <- NULL
 #tells me there are 81 cases of incomplete data?
 which(!complete.cases(expanded_data))
 
+#model of data w/ bad cases removed:
+test <- notDummyData[complete.cases(notDummyData),]
+test$X <- NULL
+testPrices <-log(test$SalePrice)
 
+testModel<- lm(testPrices~., data=test)
+summary(testModel)
 #model with dummy data (cleandmy.csv)
 firstModel <- lm(logSalePrice~., data=expanded_data)
 summary(firstModel)

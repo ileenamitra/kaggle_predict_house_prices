@@ -8,11 +8,12 @@ date: "March 20th, 2017"
 #Math 289c Final Project
 
 Set up
-```{r}
+```{r echo=FALSE, warning=FALSE}
 library(readr)
-library(tree)
 
 clean <- read_csv("~/Google_Drive/UCSD/Winter2017/ExpDataAnalysis/Projects/Final/kaggle_predict_house_prices/cleaned_data/clean.csv")
+rownames(clean) <- clean$Id
+clean$Id <- NULL
 clean$X1 <- NULL
 cleandmy <- read_csv("~/Google_Drive/UCSD/Winter2017/ExpDataAnalysis/Projects/Final/kaggle_predict_house_prices/cleaned_data/cleandmy.csv")
 cleandmy$X <- NULL
@@ -23,34 +24,53 @@ cleandmy$X1 <- NULL
 set.seed(888)
 ```
 
-We then fit a tree on the dat frame with appropriate columns.
+
+Spit the data into numerical versus categoral data
 ```{r}
-dat <- clean
-dat.tree <- tree(SalePrice~math+sex+age+educ+work+like, dat=dat)
-plot(dat.tree, type="uniform")
-text(dat.tree)
+clean.num <- clean[ , sapply(clean, is.numeric)]
+clean.char <- clean[ , sapply(clean, is.character)]
+
 ```
 
-
-```{r}
-lr.all <- glm(grade_binary~math+sex+age+educ+work+like, data = dat, family = gaussian)
-#display the results
-print(summary(lr.all))
-```
 
 ```{r}
 # load the library
 library(mlbench)
 library(caret)
-nums <- sapply(x, is.numeric)
-dat<-cleandmy[!is.na(cleandmy),]
+dat<- clean.num[,names(clean.num) != "SalePrice"]
+
 # calculate correlation matrix
-correlationMatrix <- cor(dat[,2:259])
+correlationMatrix <- cor(dat)
 # summarize the correlation matrix
-print(correlationMatrix)
+###print(correlationMatrix)
+
 # find attributes that are highly corrected (ideally >0.75)
-highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.75)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.8)
 # print indexes of highly correlated attributes
-print(highlyCorrelated)
+###print(highlyCorrelated)
+
+print(correlationMatrix[highlyCorrelated,])
 ```
+
+######OTHER TRIAL METHODS#######
+We then fit a tree on the dat frame with appropriate columns.
+```{r}
+library(tree)
+dat <- clean.num
+dat.tree <- tree(log(SalePrice) ~., data = dat)
+plot(dat.tree, type="uniform")
+text(dat.tree)
+```
+
+
+
+
+Regression method to test features
+```{r}
+dat<- clean.num
+lr.all <- glm(log(SalePrice) ~., data = dat, family = gaussian)
+#display the results
+print(summary(lr.all))
+```
+
 

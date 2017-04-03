@@ -12,13 +12,14 @@ Set up
 library(readr)
 set.seed(888)
 df <- read_csv("~/Google_Drive/UCSD/Winter2017/ExpDataAnalysis/Projects/Final/kaggle_predict_house_prices/cleaned_data/cleandmy.csv")
+rownames(df) <- df$Id
+df$Id <- NULL
+df$X <- NULL
+df$X1 <- NULL
 ```
 
 Split data into test and training sets
 ```{r}
-rownames(df) <- df$Id
-df$Id <- NULL
-df$X1 <- NULL
 total.n <- nrow(df)
 rand <- sample(seq(1, total.n), total.n*(2/3), replace = F)
 train = df[rand,]
@@ -27,8 +28,8 @@ test = df[-rand,]
 
 Use significant key variables for model
 ```{r}
-num.vars = c("MSSubClass", "LotArea", "OverallQual", "OverallCond", "YearBuilt", "YearRemodAdd", "ExterQual", "BsmtQual", "1stFlrSF", "2ndFlrSF", "BsmtFullBath", "FullBath", "Fireplaces", "GarageArea", "GarageQual", "WoodDeckSF", "ScreenPorch", "PoolArea")
-char.vars = c("MSZoningFV", "MSZoningRH", "MSZoningRL", "MSZoningRM", "NeighborhoodBrDale", "NeighborhoodBrkSide", "NeighborhoodCollgCr", "NeighborhoodEdwards", "NeighborhoodGilbert", "NeighborhoodIDOTRR", "NeighborhoodMeadowV", "NeighborhoodMitchel", "NeighborhoodNAmes", "NeighborhoodOldTown", "NeighborhoodSawyer", "NeighborhoodSWISU", "Condition2PosA", "BldgTypeTwnhs", "BldgTypeTwnhsE", "HouseStyle1Story", "HouseStyleSFoyer", "RoofMatlWdShngl", "FoundationPConc", "HeatingGasW", "HeatingQCFa", "HeatingQCGd", "HeatingQCTA")
+num.vars = c("MSSubClass", "LotArea", "OverallQual", "OverallCond", "YearBuilt", "YearRemodAdd", "BsmtQual", "1stFlrSF", "2ndFlrSF", "BsmtFullBath", "FullBath", "Fireplaces", "GarageArea", "GarageQual", "WoodDeckSF", "ScreenPorch", "PoolArea")
+char.vars = c("MSZoning.FV", "MSZoning.RH", "MSZoning.RL", "MSZoning.RM", "Neighborhood.BrDale", "Neighborhood.BrkSide", "Neighborhood.CollgCr", "Neighborhood.Edwards", "Neighborhood.Gilbert", "Neighborhood.IDOTRR", "Neighborhood.MeadowV", "Neighborhood.Mitchel", "Neighborhood.NAmes", "Neighborhood.OldTown", "NeighborhoodSawyer", "Neighborhood.SWISU", "Condition2PosA", "BldgType.Twnhs", "BldgType.TwnhsE", "HouseStyle.1Story", "HouseStyle.SFoyer", "RoofMatl.WdShngl", "Foundation.PConc", "Heating.GasW", "HeatingQC.Fa", "HeatingQC.Gd", "HeatingQC.TA")
 all.vars = c(num.vars, char.vars)
 ```
 
@@ -39,19 +40,19 @@ Build Formula
 ```{r}
 library(randomForest)
 # add + sign between exploratory variables
-varNames <- paste(all.vars, collapse = "+")
+varNames <- paste(num.vars, collapse = "+")
  
 # Add response variable and convert to a formula object
-rf.form <- as.formula(paste("salePrice", varNames, sep = " ~ "))
+rf.form <- as.formula(paste("SalePrice", varNames, sep = "~"))
 ```
 
 Plot decision trees
 ```{r}
-cross.sell.rf <- randomForest(rf.form,
-                              cross.sell.dev,
-                              ntree=500,
+train.rf <- randomForest(rf.form,
+                              train,
+                              ntree=50,
                               importance=T)
 
-plot(cross.sell.rf)
+plot(train.rf)
 ```
 

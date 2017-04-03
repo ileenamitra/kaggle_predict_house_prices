@@ -16,6 +16,7 @@ rownames(df) <- df$Id
 df$Id <- NULL
 df$X <- NULL
 df$X1 <- NULL
+na.omit(df) #RF cannot work on any NA
 ```
 
 Split data into test and training sets
@@ -28,7 +29,7 @@ test = df[-rand,]
 
 Use significant key variables for model
 ```{r}
-num.vars = c("MSSubClass", "LotArea", "OverallQual", "OverallCond", "YearBuilt", "YearRemodAdd", "BsmtQual", "1stFlrSF", "2ndFlrSF", "BsmtFullBath", "FullBath", "Fireplaces", "GarageArea", "GarageQual", "WoodDeckSF", "ScreenPorch", "PoolArea")
+num.vars = c("MSSubClass", "LotArea", "OverallQual", "OverallCond", "YearBuilt", "YearRemodAdd", "FirstFlrSF", "SecondFlrSF", "BsmtFullBath", "FullBath", "Fireplaces", "GarageArea", "GarageQual", "WoodDeckSF", "ScreenPorch", "PoolArea")
 char.vars = c("MSZoning.FV", "MSZoning.RH", "MSZoning.RL", "MSZoning.RM", "Neighborhood.BrDale", "Neighborhood.BrkSide", "Neighborhood.CollgCr", "Neighborhood.Edwards", "Neighborhood.Gilbert", "Neighborhood.IDOTRR", "Neighborhood.MeadowV", "Neighborhood.Mitchel", "Neighborhood.NAmes", "Neighborhood.OldTown", "NeighborhoodSawyer", "Neighborhood.SWISU", "Condition2PosA", "BldgType.Twnhs", "BldgType.TwnhsE", "HouseStyle.1Story", "HouseStyle.SFoyer", "RoofMatl.WdShngl", "Foundation.PConc", "Heating.GasW", "HeatingQC.Fa", "HeatingQC.Gd", "HeatingQC.TA")
 all.vars = c(num.vars, char.vars)
 ```
@@ -39,16 +40,20 @@ Notes from: http://dni-institute.in/blogs/random-forest-using-r-step-by-step-tut
 Build Formula
 ```{r}
 library(randomForest)
+#IF WANT TO USE ALL VARIABLES
+rf.form.all = as.formula("SalePrice ~ .")
+
+#IF WANT TO USE SELECTED KEY VARIABLES
 # add + sign between exploratory variables
 varNames <- paste(num.vars, collapse = "+")
  
 # Add response variable and convert to a formula object
-rf.form <- as.formula(paste("SalePrice", varNames, sep = "~"))
+rf.form.key <- as.formula(paste("SalePrice", varNames, sep = "~"))
 ```
 
 Plot decision trees
 ```{r}
-train.rf <- randomForest(rf.form,
+train.rf <- randomForest(rf.form.key,
                               train,
                               ntree=50,
                               importance=T)

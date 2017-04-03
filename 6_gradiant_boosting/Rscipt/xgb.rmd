@@ -1,0 +1,114 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(readr)
+set.seed(888)
+df <- read_csv("clean.csv")
+#df <- read_csv("cleandmy.csv")
+
+```
+
+```{r}
+#train_x[] <- lapply(train_x, as.numeric)
+#test_x[]<-lapply(test_x, as.numeric)
+#rownames(df) <- df$Id
+
+
+features=names(df)
+for(f in features){
+  if(class(df[[f]])=="character"){
+    levels=sort(unique(df[[f]]))
+    df[[f]]=as.integer(factor(df[[f]],levels = levels))
+  }
+}
+
+for(i in 1:66){
+  if(is.factor(df[,i])){
+    df[,i]<-as.integer(df[,i])
+  }
+}
+
+total.n <- nrow(df)
+rand <- sample(seq(1, total.n), total.n*(2/3), replace = F)
+Training_Inner = df[rand,]
+Test_Inner = df[-rand,]
+
+```
+
+```{r}
+library(xgboost)
+train<- as.matrix(Training_Inner, rownames.force=NA)
+test<- as.matrix(Test_Inner, rownames.force=NA)
+train <- as(train, "sparseMatrix")
+test <- as(test, "sparseMatrix")
+# Never forget to exclude objective variable in 'data option'
+train_Data <- xgb.DMatrix(data = train[,2:66], label = train[,"SalePrice"])
+
+```
+
+```{r}
+# Tuning the parameters #
+# Creat Empty List
+All_rmse<- c()
+Param_group<-c()
+for (iter in 1:20) {
+  param <- list(objective = "reg:linear",
+                eval_metric = "rmse",
+                booster = "gbtree",
+                max_depth = sample(6:10, 1),
+                eta = runif(1, 0.01, 0.3),
+                gamma = runif(1, 0.0, 0.2), 
+                subsample = runif(1, 0.6, 0.9),
+                colsample_bytree = runif(1, 0.5, 0.8)
+                
+  )
+  cv.nround = 500
+  cv.nfold = 4
+  mdcv <- xgb.cv(data=train_Data, params = param, nthread=6, 
+                 nfold=cv.nfold, nrounds=cv.nround,verbose = TRUE)
+}
+```
+```{r}
+param<-list(
+  objective = "reg:linear",
+  eval_metric = "rmse",
+  booster = "gbtree",
+  max_depth = 8,
+  eta = 0.123,
+  gamma = 0.0385, 
+  subsample = 0.734,
+  colsample_bytree = 0.512
+)
+```
+
+```{r}
+Training <-
+  xgb.train(params = param,
+            data = train_Data,
+            nrounds = 600,
+            watchlist = list(train = train_Data),
+            verbose = TRUE,
+            print_every_n = 50,
+            nthread = 6)
+
+```
+
+```{r}
+test_data <- xgb.DMatrix(data = test[,2:66])
+
+prediction <- predict(Training, test_data)
+rmse(log(Test_Inner$SalePrice),log(prediction))
+
+```
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).

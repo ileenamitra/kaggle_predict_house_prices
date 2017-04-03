@@ -27,8 +27,31 @@ test = df[-rand,]
 
 Use significant key variables for model
 ```{r}
-num.vars = c()
-char.vars = c()
+num.vars = c("MSSubClass", "LotArea", "OverallQual", "OverallCond", "YearBuilt", "YearRemodAdd", "ExterQual", "BsmtQual", "1stFlrSF", "2ndFlrSF", "BsmtFullBath", "FullBath", "Fireplaces", "GarageArea", "GarageQual", "WoodDeckSF", "ScreenPorch", "PoolArea")
+char.vars = c("MSZoningFV", "MSZoningRH", "MSZoningRL", "MSZoningRM", "NeighborhoodBrDale", "NeighborhoodBrkSide", "NeighborhoodCollgCr", "NeighborhoodEdwards", "NeighborhoodGilbert", "NeighborhoodIDOTRR", "NeighborhoodMeadowV", "NeighborhoodMitchel", "NeighborhoodNAmes", "NeighborhoodOldTown", "NeighborhoodSawyer", "NeighborhoodSWISU", "Condition2PosA", "BldgTypeTwnhs", "BldgTypeTwnhsE", "HouseStyle1Story", "HouseStyleSFoyer", "RoofMatlWdShngl", "FoundationPConc", "HeatingGasW", "HeatingQCFa", "HeatingQCGd", "HeatingQCTA")
 all.vars = c(num.vars, char.vars)
+```
+
+Implement random forest model
+Notes from: http://dni-institute.in/blogs/random-forest-using-r-step-by-step-tutorial/
+
+Build Formula
+```{r}
+library(randomForest)
+# add + sign between exploratory variables
+varNames <- paste(all.vars, collapse = "+")
+ 
+# Add response variable and convert to a formula object
+rf.form <- as.formula(paste("salePrice", varNames, sep = " ~ "))
+```
+
+Plot decision trees
+```{r}
+cross.sell.rf <- randomForest(rf.form,
+                              cross.sell.dev,
+                              ntree=500,
+                              importance=T)
+
+plot(cross.sell.rf)
 ```
 

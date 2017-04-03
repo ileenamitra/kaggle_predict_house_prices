@@ -46,7 +46,7 @@ correlationMatrix <- cor(dat)
 ###print(correlationMatrix)
 
 # find attributes that are highly corrected (ideally >0.75)
-highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.8, names = TRUE)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.75, names = TRUE)
 # print indexes of highly correlated attributes
 print(highlyCorrelated)
 
@@ -64,7 +64,7 @@ dat<- clean.num
 # define the control using a random forest selection function
 control <- rfeControl(functions=rfFuncs, method="boot", number=10)
 # run the RFE algorithm
-results <- rfe(dat[,names(clean.num) != "SalePrice"], dat$SalePrice, sizes=c(1:36), rfeControl=control)
+results <- rfe(dat[,names(dat) != "SalePrice"], dat$SalePrice, sizes=c(1:36), rfeControl=control)
 # summarize the results
 print(results)
 # list the chosen features

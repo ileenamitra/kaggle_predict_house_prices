@@ -1,0 +1,64 @@
+MSSubClass = clean$MSSubClass
+d <- density(MSSubClass)
+plot (d, main="Density of MSSubClass")
+LotArea = clean$LotArea
+plot(LotArea)
+d <-density(LotArea)
+plot (d, main="Density of LotArea", lwd=2)
+hist(LotArea, breaks=100, xlim=c(0,60000), prob=TRUE)
+OverallQual=clean$OverallQual
+d <- density(OverallQual)
+plot(d, main="Density of OverallQual", lwd=2)
+YearBuilt=clean$YearBuilt
+d<-density(YearBuilt)
+plot(d, main="Density of YearBuilt", lwd=2)
+hist(YearBuilt, ylim=c(0, 450))
+YearRemodAdd=clean$YearRemodAdd
+d<-density(YearRemodAdd)
+plot(d, main="Density of YearRemodAdd", lwd=2)
+hist(YearRemodAdd, ylim=c(0, 300))
+ExterQual=clean$ExterQual
+d<-density(ExterQual)
+plot(d, main="Density of ExterQual", lwd=2)
+BsmtQual=clean$BsmtQual
+d<-density(BsmtQual)
+plot(d, main="Density of BsmtQual", lwd=2)
+FirstFlrSF=clean$`1stFlrSF`
+d<-density(FirstFlrSF)
+plot(d, main="Density of 1stFlrSF", lwd=2)
+hist(FirstFlrSF, breaks=50, ylim=c(0,200), xlab="Square Feet")
+SecondFlrSF=clean$`2ndFlrSF`
+d<-density(SecondFlrSF)
+plot(d, main="Denisty of 2ndFlrSF", lwd=2)
+hist(SecondFlrSF, xlab="Square Feet", breaks=20, ylim=c(0, 950))
+BsmtFullBath=clean$BsmtFullBath
+d<-density(BsmtFullBath)
+plot(d, main="Density of BsmtFullBath", lwd=2)
+hist(BsmtFullBath, ylim=c(0, 900), xlab="Number of Baths")
+FullBath=clean$FullBath
+d<-density(FullBath)
+plot(d, main="Density of FullBath", lwd=2)
+hist(FullBath, xlab="Number of Baths", ylim=c(0, 900))
+Fireplaces=clean$Fireplaces
+d<-density(Fireplaces)
+plot(d, main="Density of Fireplaces", lwd=2)
+hist(Fireplaces, xlab="Number of Fireplaces")
+GarageArea=clean$GarageArea
+d<-density(GarageArea)
+plot(d, main="Density of GarageArea", lwd=2)
+hist(GarageArea, xlab="Square Feet", breaks=30, ylim=c(0, 250))
+GarageQual=clean$GarageQual
+d<-density(GarageQual)
+plot(d, main="Density of GarageQual", lwd=2)
+WoodDeckSF=clean$WoodDeckSF
+d<-density(WoodDeckSF)
+plot(d, main="Density of WoodDeckSF", lwd=2)
+hist(WoodDeckSF, xlab="Square Feet", breaks=20)
+ScreenPorch=clean$ScreenPorch
+d<-density(ScreenPorch)
+plot(d, main="Density of ScreenPorch", lwd=2)
+hist(ScreenPorch, xlab="Square Feet", ylim=c(0,1500))
+PoolArea=clean$PoolArea
+d<-density(PoolArea)
+plot(d, main="Denisty of PoolArea", lwd=2)
+hist(PoolArea, xlab="Square Feet", breaks=100)

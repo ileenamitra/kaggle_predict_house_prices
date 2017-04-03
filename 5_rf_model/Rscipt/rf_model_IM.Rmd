@@ -29,7 +29,7 @@ test = df[-rand,]
 
 Use significant key variables for model
 ```{r}
-num.vars = c("MSSubClass", "LotArea", "OverallQual", "OverallCond", "YearBuilt", "YearRemodAdd", "FirstFlrSF", "SecondFlrSF", "BsmtFullBath", "FullBath", "Fireplaces", "GarageArea", "GarageQual", "WoodDeckSF", "ScreenPorch", "PoolArea")
+num.vars = c("MSSubClass", "LotArea", "OverallQual", "OverallCond", "YearBuilt", "YearRemodAdd", "FirstFlrSF", "SecondFlrSF", "BsmtFullBath", "FullBath", "Fireplaces", "GarageArea", "WoodDeckSF", "ScreenPorch", "PoolArea")
 char.vars = c("MSZoning.FV", "MSZoning.RH", "MSZoning.RL", "MSZoning.RM", "Neighborhood.BrDale", "Neighborhood.BrkSide", "Neighborhood.CollgCr", "Neighborhood.Edwards", "Neighborhood.Gilbert", "Neighborhood.IDOTRR", "Neighborhood.MeadowV", "Neighborhood.Mitchel", "Neighborhood.NAmes", "Neighborhood.OldTown", "NeighborhoodSawyer", "Neighborhood.SWISU", "Condition2PosA", "BldgType.Twnhs", "BldgType.TwnhsE", "HouseStyle.1Story", "HouseStyle.SFoyer", "RoofMatl.WdShngl", "Foundation.PConc", "Heating.GasW", "HeatingQC.Fa", "HeatingQC.Gd", "HeatingQC.TA")
 all.vars = c(num.vars, char.vars)
 ```

@@ -16,7 +16,11 @@ rownames(df) <- df$Id
 df$Id <- NULL
 df$X <- NULL
 df$X1 <- NULL
-na.omit(df) #RF cannot work on any NA
+df <- na.omit(df) #RF cannot work on any NA
+df$LogSalePrice <- log(df$SalePrice)
+
+#set interest var
+response.var = "LogSalePrice"
 ```
 
 Split data into test and training sets
@@ -41,23 +45,59 @@ Build Formula
 ```{r}
 library(randomForest)
 #IF WANT TO USE ALL VARIABLES
-rf.form.all = as.formula("SalePrice ~ .")
+rf.form.all = as.formula( paste(response.var, "~ ."))
 
 #IF WANT TO USE SELECTED KEY VARIABLES
 # add + sign between exploratory variables
 varNames <- paste(num.vars, collapse = "+")
  
 # Add response variable and convert to a formula object
-rf.form.key <- as.formula(paste("SalePrice", varNames, sep = "~"))
+rf.form.key <- as.formula(paste(response.var, varNames, sep = "~"))
 ```
 
 Plot decision trees
 ```{r}
-train.rf <- randomForest(rf.form.key,
+train <- na.omit(train)
+train.rf <- randomForest(rf.form.all,
                               train,
-                              ntree=50,
+                              ntree=500,
                               importance=T)
 
 plot(train.rf)
+```
+
+
+RF Variable Selection Method
+```{r}
+# Variable Importance Plot
+varImpPlot(train.rf,
+           sort = T,
+           main="Variable Importance",
+           n.var=20)
+
+# Variable Importance Table
+var.imp <- data.frame(importance(train.rf,
+           type=2))
+# make row names as columns
+var.imp$Variables <- row.names(var.imp)
+var.imp[order(var.imp$IncNodePurity,decreasing = T),]
+```
+
+
+```{r}
+# Predicting response variable
+test$PredictedSalePrice <- predict(train.rf, test)
+predicted.response.var = "PredictedSalePrice"
+library("ggplot2")
+qplot(data=test, x=LogSalePrice, y=PredictedSalePrice)
+cor.test(test$LogSalePrice, test$PredictedSalePrice, method = "spearman")
+```
+
+
+```{r}
+library("ModelMetrics")
+test.rmse = rmse(test$LogSalePrice, test$PredictedSalePrice)
+test.rmse.norm = test.rmse/(max(test[,response.var])-min(test[,response.var]))
+test.rmse.norm
 ```
 

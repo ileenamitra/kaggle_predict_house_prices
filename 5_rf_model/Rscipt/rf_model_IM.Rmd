@@ -7,89 +7,115 @@ date: "March 20th, 2017"
 
 #Math 289c Final Project
 
-Set up
+Description:  
+Implement random forest model
+Notes from: http://dni-institute.in/blogs/random-forest-using-r-step-by-step-tutorial/
+
+
+Input and set up data 
 ```{r echo=FALSE, warning=FALSE}
 library(readr)
 set.seed(888)
 df <- read_csv("~/Google_Drive/UCSD/Winter2017/ExpDataAnalysis/Projects/Final/kaggle_predict_house_prices/cleaned_data/cleandmy.csv")
+
+#fix cols 
 rownames(df) <- df$Id
 df$Id <- NULL
 df$X <- NULL
 df$X1 <- NULL
 df <- na.omit(df) #RF cannot work on any NA
-df$LogSalePrice <- log(df$SalePrice)
+
+
+#change col names for R
+colnames(df)[which(colnames(df)== "X1stFlrSF")] = "FirstFlrSF"
+colnames(df)[which(colnames(df)== "X2ndFlrSF")] = "SecondFlrSF"
 
 #set interest var
+df$LogSalePrice <- log(df$SalePrice)
 response.var = "LogSalePrice"
 ```
 
-Split data into test and training sets
+Split data into 1/3 test and 2/3 training sets
 ```{r}
 total.n <- nrow(df)
 rand <- sample(seq(1, total.n), total.n*(2/3), replace = F)
 train = df[rand,]
 test = df[-rand,]
+
+#do not want SalePrice to be included as a variable in analysis
+train$SalePrice = NULL
+test$SalePrice = NULL
 ```
 
-Use significant key variables for model
+
+
+Option A: Use significant key variables found via linear regression 
 ```{r}
 num.vars = c("MSSubClass", "LotArea", "OverallQual", "OverallCond", "YearBuilt", "YearRemodAdd", "FirstFlrSF", "SecondFlrSF", "BsmtFullBath", "FullBath", "Fireplaces", "GarageArea", "WoodDeckSF", "ScreenPorch", "PoolArea")
 char.vars = c("MSZoning.FV", "MSZoning.RH", "MSZoning.RL", "MSZoning.RM", "Neighborhood.BrDale", "Neighborhood.BrkSide", "Neighborhood.CollgCr", "Neighborhood.Edwards", "Neighborhood.Gilbert", "Neighborhood.IDOTRR", "Neighborhood.MeadowV", "Neighborhood.Mitchel", "Neighborhood.NAmes", "Neighborhood.OldTown", "NeighborhoodSawyer", "Neighborhood.SWISU", "Condition2PosA", "BldgType.Twnhs", "BldgType.TwnhsE", "HouseStyle.1Story", "HouseStyle.SFoyer", "RoofMatl.WdShngl", "Foundation.PConc", "Heating.GasW", "HeatingQC.Fa", "HeatingQC.Gd", "HeatingQC.TA")
-all.vars = c(num.vars, char.vars)
+key.vars = c(num.vars, char.vars)
 ```
 
-Implement random forest model
-Notes from: http://dni-institute.in/blogs/random-forest-using-r-step-by-step-tutorial/
 
-Build Formula
+
+Option B: Use key variables found via random forrest  
+RF Variable Selection Method
 ```{r}
 library(randomForest)
 #IF WANT TO USE ALL VARIABLES
-rf.form.all = as.formula( paste(response.var, "~ ."))
+rf.form.all = as.formula(paste(response.var, "~ ."))
 
+train.all.rf <- randomForest(formula = rf.form.all, 
+                             data = train,
+                             ntree = 500,
+                             importance = T)
+
+# Variable Importance Plot
+varImpPlot(train.all.rf,
+           sort = T,
+           main="Variable Mean Decrease in Accuracy",
+           n.var=10)
+
+# Variable Importance Table
+var.imp <- data.frame(importance(train.all.rf))
+var.imp <- var.imp[order(var.imp$X.IncMSE,decreasing = T),]
+View(var.imp[1:50,])
+key.vars <- rownames(var.imp[1:50,])
+###write.csv(var.imp[1:50,], file="~/Google_Drive/UCSD/Winter2017/ExpDataAnalysis/Projects/Final/kaggle_predict_house_prices/5_rf_model/plots/var_impt_table.csv", quote=F, row.names=T)
+```
+
+
+
+Build Formula
+```{r}
 #IF WANT TO USE SELECTED KEY VARIABLES
 # add + sign between exploratory variables
-varNames <- paste(num.vars, collapse = "+")
+varNames <- paste(key.vars, collapse = "+")
  
 # Add response variable and convert to a formula object
 rf.form.key <- as.formula(paste(response.var, varNames, sep = "~"))
 ```
 
+
+
 Plot decision trees
 ```{r}
-train <- na.omit(train)
-train.rf <- randomForest(rf.form.all,
-                              train,
-                              ntree=500,
-                              importance=T)
+train.key.rf <- randomForest(formula = rf.form.key, #can use rf.form.all OR rf.form.key
+                             data = train,
+                             ntree = 300,
+                             importance = F)
 
-plot(train.rf)
+###plot(train.key.rf, main = "RF Error rate versus number of trees")
 ```
 
-
-RF Variable Selection Method
-```{r}
-# Variable Importance Plot
-varImpPlot(train.rf,
-           sort = T,
-           main="Variable Importance",
-           n.var=20)
-
-# Variable Importance Table
-var.imp <- data.frame(importance(train.rf,
-           type=2))
-# make row names as columns
-var.imp$Variables <- row.names(var.imp)
-var.imp[order(var.imp$IncNodePurity,decreasing = T),]
-```
 
 
 ```{r}
 # Predicting response variable
-test$PredictedSalePrice <- predict(train.rf, test)
+test$PredictedSalePrice <- predict(train.key.rf, test)
 predicted.response.var = "PredictedSalePrice"
 library("ggplot2")
-qplot(data=test, x=LogSalePrice, y=PredictedSalePrice)
+qplot(data=test, x=LogSalePrice, y=PredictedSalePrice, main="Correlation between predicted and observed sale price") + geom_abline(slope=1,)
 cor.test(test$LogSalePrice, test$PredictedSalePrice, method = "spearman")
 ```
 

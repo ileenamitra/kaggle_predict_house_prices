@@ -1,0 +1,210 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+clean<-read.csv("./cleandmy.csv", stringsAsFactors = T)
+dim(clean) #66 variables
+head(clean)
+#Summary of train dataset and cleaned dataset
+str(clean)
+names(clean)
+```
+Distribution of Response variable - Sales Price
+```{r}
+#No Log transfromed
+library(ggplot2)
+p<-qplot(train$SalePrice, geom = "histogram") + geom_histogram(aes(fill = ..count..)) + ggtitle("Histogram of Sales Price") + labs(x = "Sales Price") + theme_bw()
+p
+#Log transformed
+log.SalesPrice<-log(train$SalePrice)
+p2<-qplot(log.SalesPrice, geom = "histogram") + geom_histogram(aes(fill = ..count..)) + ggtitle("Histogram of Sales Price") + labs(x = "Log(Sales Price)") + theme_bw()
+p2
+
+#Shapiro test to see if sales price are normally distributed.
+#Log transformed sales price is relatively more normally distributed.
+shapiro.test(train$SalePrice) #p-value < 2.2e-16
+shapiro.test(log.SalesPrice) #p-value = 1.149e-07
+```
+Divided data frame by numerical variables and catogorical variables.
+```{r}
+#numerical variables + sales price
+numeric.var <- clean[ , sapply(clean, is.numeric)]
+dim(numeric.var)
+head(numeric.var)
+str(numeric.var)
+#catogrocial variables + sales price
+cat.var <- cbind(clean[ ,sapply(clean, is.character)], clean$SalePrice)
+dim(cat.var)
+head(cat.var)
+table(cat.var)
+summary(cat.var)
+table(cat.var$MSZoning)
+cat.list<-as.list(names(cat.var))
+make.BarPlots<-function(dat, variable){
+        p<-qplot(dat) + geom_bar() + labs(x = sprintf("%s", variable), y = "Frequency") + theme_bw()
+        return(p)
+}
+library(gridExtra)
+plots<-numeric(length(names(cat.var)))
+for (i in 1:length(names(cat.var))){
+         plots<-qplot(dat) + geom_bar() + labs(x = names(cat.var)[i], y = "Frequency") + theme_bw()
+}
+plots
+```
+Overall quality and condition against sales price
+```{r}
+attach(numeric.var)
+#Overall Quality vs. SalesPrice
+qplot(OverallQual, SalesPrice) + ggtitle("Scatter Plot of Sales Price against Overall Quality") + labs(x = "Overall Quality", y = "Sales Price") 
+
+#Overall Condition vs. SalesPrice
+qplot(OverallCond, SalesPrice) + ggtitle("Scatter Plot of Sales Price against Overall Condition") + labs(x = "Overall Condition", y = "Sales Price") 
+
+
+```
+Barplots for key catogroical variables
+```{r}
+char.vars <- c("MSZoning.FV", "MSZoning.RH", "MSZoning.RL", "MSZoning.RM", "Neighborhood.BrDale", "Neighborhood.BrkSide", "Neighborhood.CollgCr", "Neighborhood.Edwards", "Neighborhood.Gilbert", "Neighborhood.IDOTRR", "Neighborhood.MeadowV", "Neighborhood.Mitchel", "Neighborhood.NAmes", "Neighborhood.OldTown", "Neighborhood.Sawyer", "Neighborhood.SWISU", "Condition2.PosA", "BldgType.Twnhs", "BldgType.TwnhsE", "HouseStyle.1Story", "HouseStyle.SFoyer", "RoofMatl.WdShngl", "Foundation.PConc", "Heating.GasW", "HeatingQC.Fa", "HeatingQC.Gd", "HeatingQC.TA")
+
+num.vars <- c("MSSubClass", "LotArea", "OverallQual", "OverallCond", "YearBuilt", "YearRemodAdd", "ExterQual", "BsmtQual", "X1stFlrSF", "X2ndFlrSF", "BsmtFullBath", "FullBath", "Fireplaces", "GarageArea", "GarageQual", "WoodDeckSF", "ScreenPorch", "PoolArea")
+all.keyvars<-c(char.vars, num.vars)
+fm<-as.formula(paste("log(SalePrice) ~", paste(all.keyvars, collapse = " + ")))
+fm
+df.char.vars<-data.frame(char.vars)
+head(df.char.vars)
+barplot(table(cat.var$Neighborhood), las = 2, main = "Neighborhood", ylab = "Frequency")
+
+
+names(cat.var)
+doPlots<-function(r){
+        par(mfrow = c(2,2))  
+        for (i in r) {
+                dat<-cat.var[,i]
+                barplot(table(dat), main = sprintf("%s", names(cat.var)[i]), las =2, ylab = "Frequency")
+        }
+}
+groups<-c("MSZoning", "Condition2",  "BldgType", "HouseStyle", "RoofMatl", "Foundation", "HeatingQC", "Heating")
+
+numbers<-numeric(length(groups))
+for (i in 1:length(groups)){
+        variable<-groups[i]
+        numbers[i]<-which(names(cat.var) == groups[i])
+}
+doPlots(numbers[1:4])
+doPlots(numbers[5:8])
+
+p<-ggplot(cat.var, aes(cat.var$Neighborhood, cat.var$`clean$SalePrice`))
+p + geom_boxplot(aes(fill = Neighborhood))  + theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position="none") + ggtitle("Boxplot of Sale Price Grouped by Neighborhood") + ylab("Sale Price") + xlab("Neighborhood")
+#Function to making PieCharts
+do.Piechart<-function(inmatrix){
+        df<-data.frame(table(inmatrix))
+        bp<-ggplot(df, aes(x = "", y = Freq, fill = inmatrix)) + geom_bar(stat = "identity")
+        bp + coord_polar("y", start = 0)
+}
+do.Piechart(cat.var$Street)
+apply(cat.var, 2, do.Piechart)
+
+```
+Gradient Boosting Testing
+```{r}
+library(xgboost)
+library(readr)
+library(Metrics)
+set.seed(888)
+rownames(clean) <- clean$Id
+clean$Id <- NULL
+clean$X1 <- NULL
+total.n <- nrow(clean)
+rand <- sample(seq(1, total.n), total.n*(2/3), replace = F)
+train <- clean[rand,]
+test <- clean[-rand,]
+dim(train)
+dim(test)
+str(train)
+model <- gbm(log(SalePrice) ~., data = train, distribution = "laplace",
+              n.trees = 300,
+              interaction.depth = 8,
+              n.minobsinnode = 10,
+              shrinkage = 0.01,
+              bag.fraction = 0.6,
+              cv.folds = 100,
+              keep.data = F,
+              verbose = F
+             )
+
+model <- gbm(fm, data = train, distribution = "laplace",
+              n.trees = 300,
+              interaction.depth = 8,
+              n.minobsinnode = 10,
+              shrinkage = 0.01,
+              bag.fraction = 0.5,
+              cv.folds = 100,
+              keep.data = F,
+              verbose = F
+             )
+prediction <- predict(model, test, n.trees = 300)
+rmse(log(test$SalePrice),prediction)
+#Spearman correlation test
+corr<-cor.test(y = log(test$SalePrice), x = prediction, method = "spearman", exact = F)
+corr
+lm.fit<-lm(log(test$SalePrice)~prediction)
+coef(lm.fit)
+#(Intercept)  prediction 
+# -3.886979    1.321894 
+summary(lm.fit)
+plot(prediction, log(test$SalePrice), ylab = "log(Sale Price)", xlab = "Predicted Sale Price", main = "Correlation between predicted and observed sale price")
+abline(a = coef(lm.fit)[1], b = coef(lm.fit)[2], col = "red")
+#Test on test dataset
+test.dataset<-read.csv("test-clean.csv")
+```
+
+
+
+```{r}
+#Optimize tuning parameters:
+library(caret)
+library(parallel)
+library(doMC)
+library(plyr)
+registerDoMC(cores = 20)
+# Max shrinkage for gbm: 0.01
+nl = nrow(train)
+max(0.01, 0.1*min(1, nl/10000))
+# Max Value for interaction.depth: 8 
+floor(sqrt(NCOL(train)))
+getModelInfo()$gbm$type[1]
+#Create a data frame from all combinations of the supplied vectors or factors. 
+gbmGrid<-expand.grid(interaction.depth = c(1, 3, 6, 8),
+                    n.trees = (0:50)*50, 
+                    shrinkage = seq(.0005, .01,.0005),
+                    n.minobsinnode = 10) # you can also put something  
+gbmGrid
+#Control the computational nuances of the train function
+fitControl <- trainControl(method = "repeatedcv",
+                       repeats = 5,
+                       preProcOptions = list(thresh = 0.95),
+                       classProbs = TRUE,
+                       summaryFunction = twoClassSummary)
+fitControl
+set.seed(5)
+gbmFit1<- train(log(SalePrice) ~ ., data = train,
+            distribution = "laplace",
+            method = "gbm", bag.fraction = 0.5,
+            nTrain = round(nrow(train) *.75),
+            trControl = fitControl,
+            verbose = TRUE,
+            tuneGrid = gbmGrid,
+            ## Specify which metric to optimize
+            metric = "RMSE")
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).

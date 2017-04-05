@@ -101,21 +101,33 @@ rf.form.key <- as.formula(paste(response.var, varNames, sep = "~"))
 Plot decision trees
 ```{r}
 train.key.rf <- randomForest(formula = rf.form.key, #can use rf.form.all OR rf.form.key
+                             x = train[,key.vars],
+                             y = train$LogSalePrice,
                              data = train,
                              ntree = 300,
-                             importance = F)
+                             xtest = test[,key.vars],
+                             ytest = test$LogSalePrice, 
+                             corr.bias = F,
+                             keep.forest = T)
+train.key.rf
+plot(train.key.rf, main = "RF Error rate versus number of trees")
+```
 
-###plot(train.key.rf, main = "RF Error rate versus number of trees")
+Correlation of training dataset (n=973) sale price and predicted sale price
+```{r}
+library("ggplot2")
+qplot(x=train.key.rf$y, y=train.key.rf$predicted, main="Correlation between predicted and observed sale price") + geom_abline(slope=1, col="red")
+cor.test(x=train.key.rf$y, y=train.key.rf$predicted, method = "spearman")
 ```
 
 
-
+Correlation of testing dataset (n=487) sale price and predicted sale price
 ```{r}
 # Predicting response variable
 test$PredictedSalePrice <- predict(train.key.rf, test)
 predicted.response.var = "PredictedSalePrice"
 library("ggplot2")
-qplot(data=test, x=LogSalePrice, y=PredictedSalePrice, main="Correlation between predicted and observed sale price") + geom_abline(slope=1,)
+qplot(data=test, x=LogSalePrice, y=PredictedSalePrice, main="Correlation between predicted and observed sale price") + geom_abline(slope=1, col="red")
 cor.test(test$LogSalePrice, test$PredictedSalePrice, method = "spearman")
 ```
 
@@ -126,4 +138,6 @@ test.rmse = rmse(test$LogSalePrice, test$PredictedSalePrice)
 test.rmse.norm = test.rmse/(max(test[,response.var])-min(test[,response.var]))
 test.rmse.norm
 ```
+
+
 
